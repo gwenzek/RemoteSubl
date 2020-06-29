@@ -10,7 +10,7 @@
     /*
         listen port
     */
-    "port": 52698,
+    "ports": [52698],
 
     /*
         display a dialog when connection is lost

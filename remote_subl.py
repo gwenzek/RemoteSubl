@@ -14,7 +14,7 @@ WRITE_TEMP_FILE_ERROR = "Failed to write to temp file! Error: {}"
 CONNECTION_LOST = "Connection to {} is lost."
 FILES = {}
 LOST_FILES = {}
-server = None
+SERVERS = []
 
 
 def subl(*args):
@@ -304,22 +304,25 @@ class TCPServer(socketserver.ThreadingTCPServer):
 
 
 def unload_handler():
-    global server
-    say('Killing server...')
-    if server:
+    global SERVERS
+    say('Killing %d servers...' % len(SERVERS))
+    for server in SERVERS:
         server.shutdown()
         server.server_close()
+    SERVERS = []
 
 
 def plugin_loaded():
-    global server
+    global SERVERS
 
     # Load settings
     settings = sublime.load_settings("remote_subl.sublime-settings")
-    port = settings.get("port", 52698)
+    ports = settings.get("ports", [52698])
     host = settings.get("host", "localhost")
 
-    # Start server thread
-    server = TCPServer((host, port), ConnectionHandler)
-    Thread(target=server.serve_forever, args=[]).start()
-    say('Server running on {}:{} ...'.format(host, str(port)))
+    for port in ports:
+        # Start server thread
+        server = TCPServer((host, port), ConnectionHandler)
+        Thread(target=server.serve_forever, args=[]).start()
+        say('Server running on {}:{} ...'.format(host, str(port)))
+        SERVERS.append(server)
